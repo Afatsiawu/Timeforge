@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  COORDINATOR
+  INSTRUCTOR
+  STUDENT
+}
+
+enum PreferenceLevel {
+  PREFERRED
+  AVAILABLE
+  UNAVAILABLE
+}
+
+enum RoomType {
+  CLASSROOM
+  LAB
+  HALL
+}
+
+model User {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  username      String   @unique
+  email         String   @unique
+  passwordHash  String
+  role          Role     @default(STUDENT)
+  firstName     String
+  lastName      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  Instructor    Instructor?
+  Student       Student?
+  createdSessions TimetableSession[]
+}
+
+model Course {
+  id            String     @id @default(auto()) @map("_id") @db.ObjectId
+  code          String     @unique
+  name          String
+  credits       Int
+  requiresLab   Boolean    @default(false)
+
+  classes       Class[]
+}
+
+model Instructor {
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String    @unique @db.ObjectId
+  user           User      @relation(fields: [userId], references: [id])
+  qualifications String?
+  maxHoursPerWeek Int
+  employmentType String
+
+  availability   InstructorAvailability[]
+  classes        Class[]
+}
+
+model InstructorAvailability {
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  instructorId  String          @db.ObjectId
+  instructor    Instructor      @relation(fields: [instructorId], references: [id])
+  dayOfWeek     Int // 0-6
+  startTime     String
+  endTime       String
+  preference    PreferenceLevel @default(AVAILABLE)
+}
+
+model Room {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  number      String
+  building    String
+  capacity    Int
+  type        RoomType @default(CLASSROOM)
+  facilities  String?
+  
+  sessions    TimetableSession[]
+
+  @@unique([number, building])
+}
+
+model Program {
+  id            String     @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  
+  students      Student[]
+  classes       Class[]
+}
+
+model Student {
+  id            String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String  @unique @db.ObjectId
+  user          User    @relation(fields: [userId], references: [id])
+  studentNumber String  @unique
+  programId     String  @db.ObjectId
+  program       Program @relation(fields: [programId], references: [id])
+  yearLevel     Int
+  status        String
+
+  enrollments   Enrollment[]
+}
+
+model Class {
+  id            String     @id @default(auto()) @map("_id") @db.ObjectId
+  courseId      String     @db.ObjectId
+  course        Course     @relation(fields: [courseId], references: [id])
+  semester      String
+  academicYear  String
+  instructorId  String     @db.ObjectId
+  instructor    Instructor @relation(fields: [instructorId], references: [id])
+  programId     String?    @db.ObjectId
+  program       Program?   @relation(fields: [programId], references: [id])
+  yearLevel     String?    // e.g. "Freshman (Sept)", "Sophomore"
+
+  enrollments   Enrollment[]
+  sessions      TimetableSession[]
+}
+
+model Enrollment {
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
+  studentId      String         @db.ObjectId
+  student        Student        @relation(fields: [studentId], references: [id])
+  classId        String         @db.ObjectId
+  class          Class          @relation(fields: [classId], references: [id])
+  enrollmentDate DateTime       @default(now())
+  status         String
+}
+
+model TimeSlot {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  dayOfWeek Int
+  startTime String
+  endTime   String
+  type      String   @default("REGULAR") // REGULAR, EXAM, BREAK
+
+  sessions  TimetableSession[]
+}
+
+model TimetableSession {
+  id           String         @id @default(auto()) @map("_id") @db.ObjectId
+  classId      String         @db.ObjectId
+  class        Class          @relation(fields: [classId], references: [id])
+  roomId       String         @db.ObjectId
+  room         Room           @relation(fields: [roomId], references: [id])
+  slotId       String         @db.ObjectId
+  slot         TimeSlot       @relation(fields: [slotId], references: [id])
+  academicYear String
+  semester     String
+  createdById  String         @db.ObjectId
+  createdBy    User           @relation(fields: [createdById], references: [id])
+  approved     Boolean        @default(false)
+
+  conflicts1   Conflict[]     @relation("ConflictSource")
+  conflicts2   Conflict[]     @relation("ConflictTarget")
+}
+
+model Conflict {
+  id              String           @id @default(auto()) @map("_id") @db.ObjectId
+  sessionId1      String           @db.ObjectId
+  session1        TimetableSession @relation("ConflictSource", fields: [sessionId1], references: [id])
+  sessionId2      String           @db.ObjectId
+  session2        TimetableSession @relation("ConflictTarget", fields: [sessionId2], references: [id])
+  type            String
+  severity        String
+  resolved        Boolean          @default(false)
+  resolutionNotes String?
+}
