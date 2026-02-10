@@ -141,7 +141,7 @@ To generate optimal timetables that maximize resource utilization while minimizi
 
 #### 4.2.1 Backend
 - **Framework**: Node.js with Express
-- **Database**: PostgreSQL
+- **Database**: Mongodb
 - **Cache**: Redis
 - **API**: RESTful API or GraphQL
 - **Algorithm Libraries**: OR-Tools, OptaPlanner, or custom CSP solver
@@ -151,17 +151,6 @@ To generate optimal timetables that maximize resource utilization while minimizi
 - **UI Framework**: Material-UI,    
 - **State Management**: Redux or Context API
 - **Calendar Component**: FullCalendar.js or custom grid
-
-#### 4.2.3 Mobile (Optional)
-- **Framework**: React Native 
-- **Platform**: iOS and Android
-
-#### 4.2.4 DevOps
-- **Containerization**: Docker
-- **Orchestration**: Kubernetes (optional)
-- **CI/CD**: GitHub Actions or Jenkins
-- **Monitoring**: Prometheus, Grafana
-- **Logging**: ELK Stack
 
 ## 5. Database Schema
 
@@ -196,9 +185,6 @@ To generate optimal timetables that maximize resource utilization while minimizi
 - course_name
 - department_id (FK)
 - credits
-- course_type (theory/lab/practical)
-- max_students
-- duration_minutes
 - requires_lab
 ```
 
@@ -226,10 +212,6 @@ To generate optimal timetables that maximize resource utilization while minimizi
 ```sql
 - room_id (PK)
 - room_number
-- building
-- capacity
-- room_type (classroom/lab/hall)
-- facilities (projector, whiteboard, computers, etc.)
 ```
 
 #### Programs
@@ -560,5 +542,6 @@ To generate optimal timetables that maximize resource utilization while minimizi
 - Multi-campus support
 - Advanced analytics and machine learning insights
 - Chatbot for schedule queries
-- Blockchain for credential verification#   T i m e f o r g e  
+- Blockchain for credential verification#   T i m e f o r g e 
+ 
  
